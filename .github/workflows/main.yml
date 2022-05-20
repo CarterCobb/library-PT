@@ -30,7 +30,7 @@ jobs:
         GOARCH=amd64 GOOS=linux go build -o build/book lambdas/book.go
 
     - name: Serverless Deploy
-      uses: serverless/github-actions@master
+      uses: serverless/github-action@master
       with:
         args: deploy
       env:
