@@ -6,7 +6,7 @@ This repo contains a serverless REST API and frontend to manage library books.
 
 ## Technology Stack
 
-### Main Technolgies
+### Main Technologies
 
 - Backend: [Go/Golang](https://go.dev/)
 - Frontend: [React.js](https://reactjs.org/)
@@ -16,7 +16,7 @@ This repo contains a serverless REST API and frontend to manage library books.
 - [AWS](https://aws.amazon.com/)
   - [AWS Lambda](https://aws.amazon.com/lambda/)
   - [AWS API Gateway](https://aws.amazon.com/api-gateway/)
-  - [AWS DynamDB](https://aws.amazon.com/dynamodb/)
+  - [AWS DynamoDB](https://aws.amazon.com/dynamodb/)
 
 ### CI/CD
 
