@@ -2,6 +2,8 @@
 
 This repo contains a serverless REST API and frontend to manage library books.
 
+**⚠️ This project is under development and is not fully functional.**
+
 ## Technology Stack
 
 ### Main Technolgies
