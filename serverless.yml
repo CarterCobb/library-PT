@@ -1,0 +1,68 @@
+service: library-management-system
+
+provider:
+  name: aws
+  region: us-west-1
+  runtime: go1.x
+  stage: dev
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:*
+            - events:*
+            - cloudwatch:*
+          Resource: "*"
+
+package:
+  patterns:
+    - "!./**"
+    - "./build/**"
+
+resources:
+  Resources:
+    books:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: books
+        AttributeDefinitions:
+          - AttributeName: ibsn
+            AttributeType: S
+        KeySchema:
+          - AttributeName: ibsn
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+functions:
+  hello:
+    name: ${sls:stage}-books
+    handler: build/book
+    events:
+      # Get book by ibsn
+      - http:
+          path: /book/{ibsn}
+          method: GET
+          cors: true
+      #  Get all books
+      - http:
+          path: /books
+          method: GET
+          cors: true
+      # Create a book
+      - http:
+          path: /book
+          method: POST
+          cors: true
+      # Update a book
+      - http:
+          path: /book
+          method: PATCH
+          cors: true
+      # Deletes a book by its ibsn
+      - http:
+          path: /book/{ibsn}
+          method: DELETE
+          cors: true

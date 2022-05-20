@@ -1,0 +1,39 @@
+name: Deploy Library Management System
+
+# Only run this on pushes to the main branch
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/cache@v2
+      with:
+        path: '**/node_modules'
+        key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+    - name: Setup Go
+      uses: actions/setup-go@v2
+        with:
+          go-version: '^1.18.2'
+      run: go version
+
+    - name: Install Dependencies
+      run: go get -v all
+    
+    - name: Build Binaries
+      run: |
+        GOARCH=amd64 GOOS=linux go build -o build/book lambdas/book.go
+
+    - name: Serverless Deploy
+      uses: serverless/github-actions@master
+      with:
+        args: deploy
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
