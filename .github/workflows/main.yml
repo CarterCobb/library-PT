@@ -1,6 +1,6 @@
 name: Deploy Library Management System
 
-# Only run this on pushes to the main branch
+# Only run this on closed PR's to the main branch
 on:
   pull_request:
     types: [ closed ]
