@@ -42,4 +42,11 @@ Using whichever language(s)/stack that is best suited, create a library manageme
 
 ### GitHub Actions
 
-The project is re-deployed to AWS through a GitHub Action. Worflow found [here](https://github.com/CarterCobb/library-PT/blob/main/.github/workflows/main.yml) That action is triggered by a cleased PR on the `main` branch. Please note that this only works for the code [owner](https://github.com/CarterCobb)'s repo
+The project is re-deployed to AWS through a GitHub Action. Worflow found [here](https://github.com/CarterCobb/library-PT/blob/main/.github/workflows/main.yml) That action is triggered by a cleased PR on the `main` branch. Please note that this only works for the code [owner](https://github.com/CarterCobb)'s repo.
+
+If you opt to bring up this architecture on your own AWS account through the GitHub action, add your AWS creds:
+
+In the repo secrets add the following secrets:
+
+- `AWS_ACCESS_KEY_ID` w/ your AWS access key id as it's value
+- `AWS_SECRET_ACCESS_KEY` w/ your AWS secret access key as it's value
