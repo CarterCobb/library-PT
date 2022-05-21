@@ -50,11 +50,12 @@ func GetBook(req events.APIGatewayProxyRequest, tableName string, dynaClient dyn
 
 // Create a book from the request body.
 // returns an api response with applicable data
-func CreateBook(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (
+func CreateBook(req events.APIGatewayProxyRequest, bookTable string, usersTable string, dynaClient dynamodbiface.DynamoDBAPI) (
 	*events.APIGatewayProxyResponse,
 	error,
 ) {
-	result, err := book.CreateBook(req, tableName, dynaClient)
+	uid := req.RequestContext.Authorizer["uid"]
+	result, err := book.CreateBook(req, uid.(string), bookTable, usersTable, dynaClient)
 	if err != nil {
 		return apiResponse(http.StatusBadRequest, ErrorBody{
 			aws.String(err.Error()),
@@ -66,11 +67,12 @@ func CreateBook(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 // Update a book by properties passed through body.
 // e.g. pass `ibsn` to req.Body alongside the properties to update
 // returns an api response with applicable data
-func UpdateBook(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (
+func UpdateBook(req events.APIGatewayProxyRequest, bookTable string, usersTable string, dynaClient dynamodbiface.DynamoDBAPI) (
 	*events.APIGatewayProxyResponse,
 	error,
 ) {
-	result, err := book.UpdateBook(req, tableName, dynaClient)
+	uid := req.RequestContext.Authorizer["uid"]
+	result, err := book.UpdateBook(req, uid.(string), bookTable, usersTable, dynaClient)
 	if err != nil {
 		return apiResponse(http.StatusBadRequest, ErrorBody{
 			aws.String(err.Error()),
@@ -81,12 +83,13 @@ func UpdateBook(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 
 // Delete a book by its `ibsn`
 // returns an api response with applicable data
-func DeleteBook(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (
+func DeleteBook(req events.APIGatewayProxyRequest, bookTable string, usersTable string, dynaClient dynamodbiface.DynamoDBAPI) (
 	*events.APIGatewayProxyResponse,
 	error,
 ) {
 	ibsn := req.PathParameters["ibsn"]
-	err := book.DeleteBook(ibsn, tableName, dynaClient)
+	uid := req.RequestContext.Authorizer["uid"]
+	err := book.DeleteBook(ibsn, uid.(string), bookTable, usersTable, dynaClient)
 	if err != nil {
 		return apiResponse(http.StatusBadRequest, ErrorBody{
 			aws.String(err.Error()),
@@ -152,7 +155,8 @@ func GetUser(req events.APIGatewayProxyRequest, tableName string, dynaClient dyn
 		return apiResponse(http.StatusOK, result)
 	}
 	// Get list of users
-	result, err := user.FetchUsers(tableName, dynaClient)
+	uid_auth := req.RequestContext.Authorizer["uid"]
+	result, err := user.FetchUsers(uid_auth.(string), tableName, dynaClient)
 	if err != nil {
 		return apiResponse(http.StatusBadRequest, ErrorBody{
 			aws.String(err.Error()),
@@ -183,7 +187,8 @@ func UpdateUser(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 	*events.APIGatewayProxyResponse,
 	error,
 ) {
-	result, err := user.UpdateUser(req, tableName, dynaClient)
+	uid := req.RequestContext.Authorizer["uid"]
+	result, err := user.UpdateUser(req, uid.(string), tableName, dynaClient)
 	if err != nil {
 		return apiResponse(http.StatusBadRequest, ErrorBody{
 			aws.String(err.Error()),
@@ -198,8 +203,8 @@ func DeleteUser(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 	*events.APIGatewayProxyResponse,
 	error,
 ) {
-	ibsn := req.PathParameters["uid"]
-	err := user.DeleteUser(ibsn, tableName, dynaClient)
+	uid := req.RequestContext.Authorizer["uid"]
+	err := user.DeleteUser(req, uid.(string), tableName, dynaClient)
 	if err != nil {
 		return apiResponse(http.StatusBadRequest, ErrorBody{
 			aws.String(err.Error()),

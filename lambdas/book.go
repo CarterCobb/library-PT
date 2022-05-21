@@ -15,17 +15,18 @@ var (
 )
 
 const tableName = "books"
+const usersTable = "users"
 
 func handler(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	switch req.HTTPMethod {
 	case "GET":
 		return handlers.GetBook(req, tableName, dynaClient)
 	case "POST":
-		return handlers.CreateBook(req, tableName, dynaClient)
+		return handlers.CreateBook(req, tableName, usersTable, dynaClient)
 	case "PATCH":
-		return handlers.UpdateBook(req, tableName, dynaClient)
+		return handlers.UpdateBook(req, tableName, usersTable, dynaClient)
 	case "DELETE":
-		return handlers.DeleteBook(req, tableName, dynaClient)
+		return handlers.DeleteBook(req, tableName, usersTable, dynaClient)
 	default:
 		return handlers.UnhandledMethod()
 	}

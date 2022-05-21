@@ -5,6 +5,7 @@ package book
 
 import (
 	// "cartercobb/m/pkg/user"
+	"cartercobb/m/pkg/user"
 	"encoding/json"
 	"errors"
 	"github.com/aws/aws-lambda-go/events"
@@ -14,12 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"time"
 )
-
-// // Get requesting user
-// usr, err := user.FetchUser(uid, userTable, dynaClient)
-// if err != nil {
-// 	return nil, errors.New(err.Error())
-// }
 
 var (
 	ErrorFailedToUnmarshalRecord = "failed to unmarshal record"
@@ -33,6 +28,7 @@ var (
 	ErrorBookDoesNotExists       = "book.Book does not exist"
 	ErrorBookNotAvailable        = "book.Book does not have sufficient inventory"
 	ErrorDidNotCheckout          = "cannot return a book that wasnt checked out to you"
+	ErrorLibrarianEndpoint       = "the requested action can only be fulfilled by LIBRARIAN users"
 )
 
 type BookState struct {
@@ -99,16 +95,24 @@ func FetchBooks(tableName string, dynaClient dynamodbiface.DynamoDBAPI) (*[]Book
 
 // Create a book from the request body.
 // returns new book or nil
-func CreateBook(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (
+func CreateBook(req events.APIGatewayProxyRequest, uid string, bookTable string, usersTable string, dynaClient dynamodbiface.DynamoDBAPI) (
 	*Book,
 	error,
 ) {
+	// Validate librarian user
+	usr, err := user.FetchUser(uid, usersTable, dynaClient)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+	if usr.Role != "LIBRARIAN" {
+		return nil, errors.New(ErrorLibrarianEndpoint)
+	}
 	var u Book
 	if err := json.Unmarshal([]byte(req.Body), &u); err != nil {
 		return nil, errors.New(ErrorInvalidBookData)
 	}
 	// Check if Book exists
-	currentBook, _ := FetchBook(u.IBSN, tableName, dynaClient)
+	currentBook, _ := FetchBook(u.IBSN, bookTable, dynaClient)
 	if currentBook != nil && len(currentBook.IBSN) != 0 {
 		return nil, errors.New(ErrorBookAlreadyExists)
 	}
@@ -121,7 +125,7 @@ func CreateBook(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 
 	input := &dynamodb.PutItemInput{
 		Item:      av,
-		TableName: aws.String(tableName),
+		TableName: aws.String(bookTable),
 	}
 
 	_, err = dynaClient.PutItem(input)
@@ -134,17 +138,25 @@ func CreateBook(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 // Update a book by properties passed through body.
 // e.g. pass `ibsn` to req.Body alongside the properties to update
 // returns updated book or nil
-func UpdateBook(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (
+func UpdateBook(req events.APIGatewayProxyRequest, uid string, bookTable string, usersTable string, dynaClient dynamodbiface.DynamoDBAPI) (
 	*Book,
 	error,
 ) {
+	// Validate librarian user
+	usr, err := user.FetchUser(uid, usersTable, dynaClient)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+	if usr.Role != "LIBRARIAN" {
+		return nil, errors.New(ErrorLibrarianEndpoint)
+	}
 	var u Book
 	if err := json.Unmarshal([]byte(req.Body), &u); err != nil {
 		return nil, errors.New(ErrorInvalidIBSN)
 	}
 
 	// Check if Book exists
-	currentBook, _ := FetchBook(u.IBSN, tableName, dynaClient)
+	currentBook, _ := FetchBook(u.IBSN, bookTable, dynaClient)
 	if currentBook != nil && len(currentBook.IBSN) == 0 {
 		return nil, errors.New(ErrorBookDoesNotExists)
 	}
@@ -172,7 +184,7 @@ func UpdateBook(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 
 	input := &dynamodb.PutItemInput{
 		Item:      av,
-		TableName: aws.String(tableName),
+		TableName: aws.String(bookTable),
 	}
 
 	_, err = dynaClient.PutItem(input)
@@ -184,17 +196,25 @@ func UpdateBook(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 
 // Delete a book by its `ibsn`
 // returns nil (204 No Content)
-func DeleteBook(ibsn string, tableName string, dynaClient dynamodbiface.DynamoDBAPI) error {
+func DeleteBook(ibsn string, uid string, bookTable string, usersTable string, dynaClient dynamodbiface.DynamoDBAPI) error {
+	// Validate librarian user
+	usr, err := user.FetchUser(uid, usersTable, dynaClient)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	if usr.Role != "LIBRARIAN" {
+		return errors.New(ErrorLibrarianEndpoint)
+	}
 	input := &dynamodb.DeleteItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"ibsn": {
 				S: aws.String(ibsn),
 			},
 		},
-		TableName: aws.String(tableName),
+		TableName: aws.String(bookTable),
 	}
-	_, err := dynaClient.DeleteItem(input)
-	if err != nil {
+	_, err2 := dynaClient.DeleteItem(input)
+	if err2 != nil {
 		return errors.New(ErrorCouldNotDeleteItem)
 	}
 
