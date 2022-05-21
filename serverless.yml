@@ -53,9 +53,13 @@ functions:
   authorizer:
     name: ${sls:stage}-authorizer
     handler: build/authorizer
+    environment:
+      F_TYPE: authorizer
   book:
     name: ${sls:stage}-books
     handler: build/book
+    environment:
+      F_TYPE: book
     events:
       # Get book by ibsn
       - http:
@@ -88,6 +92,8 @@ functions:
   user:
     name: ${sls:stage}-users
     handler: build/user
+    environment:
+      F_TYPE: user
     events:
       # Get user by uid
       - http:
@@ -125,6 +131,8 @@ functions:
   book-actions:
     name: ${sls:stage}-book-actions
     handler: build/book_actions
+    environment:
+      F_TYPE: book-actions
     events:
       # Checkout a book by its isbn
       - http:
