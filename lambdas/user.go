@@ -2,6 +2,8 @@ package main
 
 import (
 	"cartercobb/m/pkg/handlers"
+	"strings"
+  "log"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -21,6 +23,11 @@ func handler(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse
 	case "GET":
 		return handlers.GetUser(req, tableName, dynaClient)
 	case "POST":
+		if strings.Contains(req.Path, "login") {
+      log.Printf("in login")
+			return handlers.Login(req, tableName, dynaClient)
+		}
+    log.Printf("in create")
 		return handlers.CreateUser(req, tableName, dynaClient)
 	case "PATCH":
 		return handlers.UpdateUser(req, tableName, dynaClient)
