@@ -47,11 +47,11 @@ type Token struct {
 
 // Handles getting one user from the database (DynamoDB)
 // returns the user or nil
-func FetchUser(ibsn, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (*User, error) {
+func FetchUser(uid, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (*User, error) {
 	input := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"uid": {
-				S: aws.String(ibsn),
+				S: aws.String(uid),
 			},
 		},
 		TableName: aws.String(tableName),
