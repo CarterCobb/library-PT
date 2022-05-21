@@ -101,6 +101,11 @@ functions:
           path: /user
           method: POST
           cors: true
+      # login
+      - http:
+          path: /login
+          method: POST
+          cors: true
       # Update a user
       - http:
           path: /user
