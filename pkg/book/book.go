@@ -6,6 +6,8 @@ package book
 import (
 	"encoding/json"
 	"errors"
+	"time"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -137,6 +139,14 @@ func UpdateBook(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 	if currentBook != nil && len(currentBook.IBSN) == 0 {
 		return nil, errors.New(ErrorBookDoesNotExists)
 	}
+	// Keep unmutated properties the same as before
+	if u.Author == "" { u.Author = currentBook.Author }
+	if u.Description == "" { u.Description = currentBook.Description }
+	if u.Inventory == 0 { u.Inventory = currentBook.Inventory }
+	if u.Title == "" { u.Title = currentBook.Title }
+	u.UpdatedAt = time.Now().Local().String()
+	u.States = currentBook.States
+		
 
 	// Save Book
 	av, err := dynamodbattribute.MarshalMap(u)
@@ -175,6 +185,9 @@ func DeleteBook(ibsn string, tableName string, dynaClient dynamodbiface.DynamoDB
 	return nil
 }
 
+// TODO: Work in progress
+// Checkout a book and add to its state array.
+// Returns the checked out book
 func CheckoutBook(ibsn string, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (*Book, error) {
 	var u Book
 	// Check if Book exists
