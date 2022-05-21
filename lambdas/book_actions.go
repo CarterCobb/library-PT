@@ -2,6 +2,8 @@ package main
 
 import (
 	"cartercobb/m/pkg/handlers"
+	"strings"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -18,14 +20,11 @@ const tableName = "books"
 
 func handler(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	switch req.HTTPMethod {
-	case "GET":
-		return handlers.GetBook(req, tableName, dynaClient)
 	case "POST":
-		return handlers.CreateBook(req, tableName, dynaClient)
-	case "PATCH":
-		return handlers.UpdateBook(req, tableName, dynaClient)
-	case "DELETE":
-		return handlers.DeleteBook(req, tableName, dynaClient)
+		if strings.Contains(req.Path, "/checkout") {
+			return handlers.CheckoutBook(req, tableName, dynaClient)
+		}
+		return handlers.ReturnBook(req, tableName, dynaClient)
 	default:
 		return handlers.UnhandledMethod()
 	}
