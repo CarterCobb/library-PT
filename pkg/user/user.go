@@ -6,8 +6,6 @@ package user
 import (
 	"encoding/json"
 	"errors"
-	"time"
-
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -15,6 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
+	"time"
 )
 
 const jwtSecret = "jysyVggrzwwioncbTAGckMSGsyZizuXtlSTkyKojvtDSWYLDCTeRkpjaInxBvJtHxAKtSvRYuSTJrvPQceMwcUPpBAKKnjLnQvFI"
@@ -31,12 +31,13 @@ var (
 	ErrorUserDoesNotExists       = "user.User does not exist"
 	ErrorUserUpdateError         = "cannot update foreign user object"
 	ErrorTokenSignError          = "failed to sign jwt token"
+	ErrorPasswordHashError       = "failed to hash password"
 )
 
 type User struct {
 	UID      string `json:"uid"`
 	UserName string `json:"username"`
-	Password string `json:"password"`
+	Password string `json:"password,omitempty"`
 	Role     string `json:"role"` // `USER` or `LIBRARIAN`
 }
 
@@ -104,6 +105,13 @@ func CreateUser(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 	if currentUser != nil && len(currentUser.UID) != 0 {
 		return nil, errors.New(ErrorUserAlreadyExists)
 	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, errors.New(ErrorPasswordHashError)
+	}
+
+	u.Password = string(hashedPassword)
 	// Save User
 	av, err := dynamodbattribute.MarshalMap(u)
 	if err != nil {
@@ -142,6 +150,21 @@ func UpdateUser(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 	}
 	if u.UID != currentUser.UID {
 		return nil, errors.New(ErrorUserUpdateError)
+	}
+	if u.Password != "" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, errors.New(ErrorPasswordHashError)
+		}
+		u.Password = string(hashedPassword)
+	} else {
+		u.Password = currentUser.Password
+	}
+	if u.Role == "" {
+		u.Role = currentUser.Role
+	}
+	if u.UserName == "" {
+		u.Role = currentUser.UserName
 	}
 	// Save User
 	av, err := dynamodbattribute.MarshalMap(u)
@@ -202,6 +225,10 @@ func Login(req events.APIGatewayProxyRequest, tableName string, dynaClient dynam
 			tokenString, err := token.SignedString([]byte(jwtSecret))
 			if err != nil {
 				return nil, errors.New(ErrorTokenSignError)
+			}
+			err = bcrypt.CompareHashAndPassword([]byte(value.Password), []byte(usr.Password))
+			if err != nil {
+				return nil, errors.New(ErrorInvalidUserData)
 			}
 			u.Token = tokenString
 			return &u, nil
