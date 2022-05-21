@@ -17,6 +17,7 @@ This repo contains a serverless REST API and frontend to manage library books.
   - [AWS Lambda](https://aws.amazon.com/lambda/)
   - [AWS API Gateway](https://aws.amazon.com/api-gateway/)
   - [AWS DynamoDB](https://aws.amazon.com/dynamodb/)
+  - [AWS Amplify](https://aws.amazon.com/amplify/)
 
 ### CI/CD
 
