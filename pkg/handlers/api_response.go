@@ -5,10 +5,14 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 )
 
-// Contructs a proper API response 
+// Contructs a proper API response
 // returns &response, nil
 func apiResponse(status int, body interface{}) (*events.APIGatewayProxyResponse, error) {
-	resp := events.APIGatewayProxyResponse{Headers: map[string]string{"Content-Type": "application/json"}}
+	resp := events.APIGatewayProxyResponse{Headers: map[string]string{
+		"Content-Type":                     "application/json",
+		"Access-Control-Allow-Origin":      "*",
+		"Access-Control-Allow-Credentials": "true",
+	}}
 	resp.StatusCode = status
 
 	stringBody, _ := json.Marshal(body)
