@@ -32,6 +32,9 @@ var (
 	ErrorUserUpdateError         = "cannot update foreign user object"
 	ErrorTokenSignError          = "failed to sign jwt token"
 	ErrorPasswordHashError       = "failed to hash password"
+	ErrorInvalidRole             = "valid roles are `USER` & `LIBRARIAN`"
+	ErrorUnauthorizedMutate      = "unauthorized to mutate an unowned resource"
+	ErrorLibrarianEndpoint       = "the requested action can only be fulfilled by LIBRARIAN users"
 )
 
 type User struct {
@@ -76,7 +79,21 @@ func FetchUser(uid, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (*Us
 // Librarian only method
 // Handles getting all users from the database (DynamoDB)
 // returns []User or nil, if no Users available: []
-func FetchUsers(tableName string, dynaClient dynamodbiface.DynamoDBAPI) (*[]User, error) {
+func FetchUsers(uid string, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (*[]User, error) {
+	// validate librarian user
+	usr, err := FetchUser(uid, tableName, dynaClient)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+	if usr.Role != "LIBRARIAN" {
+		return nil, errors.New(ErrorLibrarianEndpoint)
+	}
+	return FetchUsersInternal(tableName, dynaClient)
+}
+
+// Handles getting all users from the database (DynamoDB)
+// returns []User or nil, if no Users available: []
+func FetchUsersInternal(tableName string, dynaClient dynamodbiface.DynamoDBAPI) (*[]User, error) {
 	input := &dynamodb.ScanInput{
 		TableName: aws.String(tableName),
 	}
@@ -98,6 +115,9 @@ func CreateUser(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 	var u User
 	if err := json.Unmarshal([]byte(req.Body), &u); err != nil {
 		return nil, errors.New(ErrorInvalidUserData)
+	}
+	if u.Role != "USER" && u.Role != "LIBRARIAN" {
+		return nil, errors.New(ErrorInvalidRole)
 	}
 	u.UID = uuid.New().String()
 	// Check if User exists
@@ -134,13 +154,17 @@ func CreateUser(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 // Update a user by properties passed through body.
 // e.g. pass `uid` to req.Body alongside the properties to update
 // returns updated user or nil
-func UpdateUser(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (
+func UpdateUser(req events.APIGatewayProxyRequest, uid string, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (
 	*User,
 	error,
 ) {
 	var u User
 	if err := json.Unmarshal([]byte(req.Body), &u); err != nil {
 		return nil, errors.New(ErrorInvalidUID)
+	}
+	// Validate requesting user to only mutate self
+	if u.UID != uid {
+		return nil, errors.New(ErrorUnauthorizedMutate)
 	}
 
 	// Check if User exists
@@ -163,8 +187,11 @@ func UpdateUser(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 	if u.Role == "" {
 		u.Role = currentUser.Role
 	}
+	if u.Role != "USER" && u.Role != "LIBRARIAN" {
+		return nil, errors.New(ErrorInvalidRole)
+	}
 	if u.UserName == "" {
-		u.Role = currentUser.UserName
+		u.UserName = currentUser.UserName
 	}
 	// Save User
 	av, err := dynamodbattribute.MarshalMap(u)
@@ -186,11 +213,16 @@ func UpdateUser(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 
 // Delete a user by thier `uid`
 // returns nil (204 No Content)
-func DeleteUser(ibsn string, tableName string, dynaClient dynamodbiface.DynamoDBAPI) error {
+func DeleteUser(req events.APIGatewayProxyRequest, uid string, tableName string, dynaClient dynamodbiface.DynamoDBAPI) error {
+	del_uid := req.PathParameters["uid"]
+	// Validate requesting user to only mutate self
+	if del_uid != uid {
+		return errors.New(ErrorUnauthorizedMutate)
+	}
 	input := &dynamodb.DeleteItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"uid": {
-				S: aws.String(ibsn),
+				S: aws.String(del_uid),
 			},
 		},
 		TableName: aws.String(tableName),
@@ -207,7 +239,7 @@ func DeleteUser(ibsn string, tableName string, dynaClient dynamodbiface.DynamoDB
 // return jwt token
 func Login(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (*Token, error) {
 	var u Token
-	result, err := FetchUsers(tableName, dynaClient)
+	result, err := FetchUsersInternal(tableName, dynaClient)
 	if err != nil {
 		return nil, errors.New(ErrorFailedToFetchRecord)
 	}
