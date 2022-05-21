@@ -14,18 +14,18 @@ var (
 	dynaClient dynamodbiface.DynamoDBAPI
 )
 
-const tableName = "books"
+const tableName = "users"
 
 func handler(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	switch req.HTTPMethod {
 	case "GET":
-		return handlers.GetBook(req, tableName, dynaClient)
+		return handlers.GetUser(req, tableName, dynaClient)
 	case "POST":
-		return handlers.CreateBook(req, tableName, dynaClient)
+		return handlers.CreateUser(req, tableName, dynaClient)
 	case "PATCH":
-		return handlers.UpdateBook(req, tableName, dynaClient)
+		return handlers.UpdateUser(req, tableName, dynaClient)
 	case "DELETE":
-		return handlers.DeleteBook(req, tableName, dynaClient)
+		return handlers.DeleteUser(req, tableName, dynaClient)
 	default:
 		return handlers.UnhandledMethod()
 	}
