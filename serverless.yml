@@ -121,12 +121,12 @@ functions:
     handler: build/book_actions
     events:
       - http:
-          path: /checkout/{isbn}
+          path: /checkout/{ibsn}
           method: POST
           cors: true
           authorizer: ${self:custom.authorizer.users}
       - http:
-          path: /return/{isbn}
+          path: /return/{ibsn}
           method: POST
           cors: true
           authorizer: ${self:custom.authorizer.users}
