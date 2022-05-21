@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
-	"log"
 	"net/http"
 )
 
@@ -105,7 +104,6 @@ func CheckoutBook(req events.APIGatewayProxyRequest, tableName string, dynaClien
 ) {
 	ibsn := req.PathParameters["ibsn"]
 	uid := req.RequestContext.Authorizer["uid"]
-	log.Printf("UID: %s; IBSN: %s", uid, ibsn)
 	result, err := book.CheckoutBook(ibsn, uid.(string), "books", "users", dynaClient)
 	if err != nil {
 		return apiResponse(http.StatusBadRequest, ErrorBody{
@@ -122,16 +120,15 @@ func ReturnBook(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 	*events.APIGatewayProxyResponse,
 	error,
 ) {
-	// TODO: implement
-	// ibsn := req.PathParameters["ibsn"]
-	// result, err := book.CheckoutBook(ibsn, tableName, dynaClient)
-	// if err != nil {
-	// 	return apiResponse(http.StatusBadRequest, ErrorBody{
-	// 		aws.String(err.Error()),
-	// 	})
-	// }
-	// return apiResponse(http.StatusOK, result)
-	return apiResponse(http.StatusOK, nil)
+	ibsn := req.PathParameters["ibsn"]
+	uid := req.RequestContext.Authorizer["uid"]
+	result, err := book.ReturnBook(ibsn, uid.(string), "books", "users", dynaClient)
+	if err != nil {
+		return apiResponse(http.StatusBadRequest, ErrorBody{
+			aws.String(err.Error()),
+		})
+	}
+	return apiResponse(http.StatusOK, result)
 }
 
 // Handles getting one or many users from the database (DynamoDB)

@@ -32,6 +32,7 @@ var (
 	ErrorBookAlreadyExists       = "book.Book already exists"
 	ErrorBookDoesNotExists       = "book.Book does not exist"
 	ErrorBookNotAvailable        = "book.Book does not have sufficient inventory"
+	ErrorDidNotCheckout          = "cannot return a book that wasnt checked out to you"
 )
 
 type BookState struct {
@@ -39,6 +40,7 @@ type BookState struct {
 	CheckoutDate string `json:"checkoutDate"`
 	Quantity     int    `json:"quantity"`
 	Returned     bool   `json:"returned"`
+	ReturnDate   string `json:"returnDate"`
 	User         string `json:"user"`
 }
 
@@ -246,6 +248,79 @@ func CheckoutBook(ibsn string, uid string, bookTable string, userTable string, d
 		}
 		u.States = append(states, state)
 	}
+
+	// Save Book
+	av, err := dynamodbattribute.MarshalMap(u)
+	if err != nil {
+		return nil, errors.New(ErrorCouldNotMarshalItem)
+	}
+
+	input := &dynamodb.PutItemInput{
+		Item:      av,
+		TableName: aws.String(bookTable),
+	}
+
+	_, err = dynaClient.PutItem(input)
+	if err != nil {
+		return nil, errors.New(ErrorCouldNotDynamoPutItem)
+	}
+	return &u, nil
+}
+
+// Return a book that was previously checkoued out and add to its state array.
+// Book must reflect a state where the requesting user checked out a book.
+// Returns the checked out book
+func ReturnBook(ibsn string, uid string, bookTable string, userTable string, dynaClient dynamodbiface.DynamoDBAPI) (*Book, error) {
+	var u Book
+	// Check if Book exists
+	currentBook, _ := FetchBook(ibsn, bookTable, dynaClient)
+	if currentBook == nil {
+		return nil, errors.New(ErrorBookDoesNotExists)
+	}
+
+	var state BookState
+
+	for _, v := range currentBook.States {
+		if v.User == uid {
+			state = v
+			break
+		}
+	}
+
+	if (BookState{} == state) {
+		// This user did not checkout the book, therefore cannot be returned
+		return nil, errors.New(ErrorDidNotCheckout)
+	} else {
+		var states = currentBook.States
+		for i, v := range states {
+			if v.User == uid {
+				if v.Quantity-1 < 0 {
+					return nil, errors.New(ErrorDidNotCheckout)
+				}
+				state.Quantity = v.Quantity - 1
+				if v.Quantity-1 == 0 {
+					state.CheckedOut = false
+					state.Returned = true
+					state.ReturnDate = time.Now().Local().String()
+				} else {
+					// Only set if all quantity are returned
+					state.CheckedOut = true
+					state.Returned = false
+				}
+				state.User = uid
+				states = append(states[0:i], states[i+1:]...)
+				break
+			}
+		}
+		u.States = append(states, state)
+	}
+
+	u.Author = currentBook.Author
+	u.Description = currentBook.Description
+	u.IBSN = currentBook.IBSN
+	u.Title = currentBook.Title
+	u.UpdatedAt = time.Now().Local().String()
+	u.Inventory = currentBook.Inventory + 1
 
 	// Save Book
 	av, err := dynamodbattribute.MarshalMap(u)
