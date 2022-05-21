@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import BookAPI from "../api/book";
 import { connect } from "react-redux";
 import { mapStateToProps } from "../redux/reducer";
+import Template from "../components/Template";
 
 const withParams = (Component) => {
   return (props) => <Component {...props} params={useParams()} />;
@@ -24,17 +25,19 @@ class Book extends Component {
   }
 
   render() {
-    if (this.state.book === null)
-      return (
-        <div>
-          <h1>Loading Book...</h1>
-        </div>
-      );
     return (
-      <div>
-        <h1>Book: {this.state.book.title}</h1>
-        <pre>{JSON.stringify(this.state.book, null, 2)}</pre>
-      </div>
+      <Template>
+        {this.state.book === null ? (
+          <div>
+            <h1>Loading Book...</h1>
+          </div>
+        ) : (
+          <div>
+            <h1>Book: {this.state.book.title}</h1>
+            <pre>{JSON.stringify(this.state.book, null, 2)}</pre>
+          </div>
+        )}
+      </Template>
     );
   }
 }
