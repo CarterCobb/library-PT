@@ -6,13 +6,18 @@ package user
 import (
 	"encoding/json"
 	"errors"
+	"time"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
+	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 )
+
+const jwtSecret = "jysyVggrzwwioncbTAGckMSGsyZizuXtlSTkyKojvtDSWYLDCTeRkpjaInxBvJtHxAKtSvRYuSTJrvPQceMwcUPpBAKKnjLnQvFI"
 
 var (
 	ErrorFailedToUnmarshalRecord = "failed to unmarshal record"
@@ -25,6 +30,7 @@ var (
 	ErrorUserAlreadyExists       = "user.User already exists"
 	ErrorUserDoesNotExists       = "user.User does not exist"
 	ErrorUserUpdateError         = "cannot update foreign user object"
+	ErrorTokenSignError          = "failed to sign jwt token"
 )
 
 type User struct {
@@ -32,6 +38,10 @@ type User struct {
 	UserName string `json:"username"`
 	Password string `json:"password"`
 	Role     string `json:"role"` // `USER` or `LIBRARIAN`
+}
+
+type Token struct {
+	Token string `json:"token"`
 }
 
 // Handles getting one user from the database (DynamoDB)
@@ -55,6 +65,9 @@ func FetchUser(ibsn, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (*U
 	err = dynamodbattribute.UnmarshalMap(result.Item, item)
 	if err != nil {
 		return nil, errors.New(ErrorFailedToUnmarshalRecord)
+	}
+	if (User{}) == *item {
+		return nil, nil
 	}
 	return item, nil
 }
@@ -165,4 +178,34 @@ func DeleteUser(ibsn string, tableName string, dynaClient dynamodbiface.DynamoDB
 	}
 
 	return nil
+}
+
+// Login to the system as a user and get a jwt token
+// return jwt token
+func Login(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (*Token, error) {
+	var u Token
+	result, err := FetchUsers(tableName, dynaClient)
+	if err != nil {
+		return nil, errors.New(ErrorFailedToFetchRecord)
+	}
+	var usr User
+	if err := json.Unmarshal([]byte(req.Body), &usr); err != nil {
+		return nil, errors.New(ErrorInvalidUID)
+	}
+
+	for _, value := range *result {
+		if value.UserName == usr.UserName {
+			token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+				"uid": value.UID,
+				"nbf": time.Now().Unix(),
+			})
+			tokenString, err := token.SignedString([]byte(jwtSecret))
+			if err != nil {
+				return nil, errors.New(ErrorTokenSignError)
+			}
+			u.Token = tokenString
+			return &u, nil
+		}
+	}
+	return nil, errors.New(ErrorInvalidUserData)
 }

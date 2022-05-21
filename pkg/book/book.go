@@ -1,7 +1,7 @@
 package book
 
 // This file defines the book resource and implements its database interactions.
-// Most raw business logic for books. 
+// Most raw business logic for books.
 
 import (
 	"encoding/json"
@@ -30,6 +30,7 @@ type BookState struct {
 	CheckoutDate string `json:"checkoutDate"`
 	Quantity     int    `json:"quantity"`
 	Returned     bool   `json:"returned"`
+	User 		 string `json:"user"`
 }
 
 type Book struct {
@@ -63,6 +64,9 @@ func FetchBook(ibsn, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (*B
 	err = dynamodbattribute.UnmarshalMap(result.Item, item)
 	if err != nil {
 		return nil, errors.New(ErrorFailedToUnmarshalRecord)
+	}
+	if item.IBSN == "" {
+		return nil, nil
 	}
 	return item, nil
 }
@@ -169,4 +173,15 @@ func DeleteBook(ibsn string, tableName string, dynaClient dynamodbiface.DynamoDB
 	}
 
 	return nil
+}
+
+func CheckoutBook(ibsn string, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (*Book, error) {
+	var u Book
+	// Check if Book exists
+	currentBook, _ := FetchBook(u.IBSN, tableName, dynaClient)
+	if currentBook != nil && len(currentBook.IBSN) == 0 {
+		return nil, errors.New(ErrorBookDoesNotExists)
+	}
+
+	return &u, nil
 }
