@@ -10,6 +10,7 @@ import { fallback } from "./code-spliting/fallback-ui";
 
 // Pages
 const Home = lazy(() => import("./pages/Home"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Local Storage export
 export const ls = new SecureLS({ encodingType: "aes" });
@@ -21,6 +22,7 @@ const App = () => {
         <Suspense fallback={fallback}>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </Router>
