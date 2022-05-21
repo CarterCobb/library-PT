@@ -28,7 +28,10 @@ jobs:
     
     - name: Build Binaries
       run: |
-        GOARCH=amd64 GOOS=linux go build -o build/book lambdas/book.go
+        GOARCH=amd64 GOOS=linux go build -o build/user lambdas/main.go
+        GOARCH=amd64 GOOS=linux go build -o build/book lambdas/main.go
+        GOARCH=amd64 GOOS=linux go build -o build/book_actions lambdas/main.go
+        GOARCH=amd64 GOOS=linux go build -o build/authorizer lambdas/main.go
 
     - name: Serverless Deploy
       uses: serverless/github-action@master

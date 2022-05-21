@@ -4,7 +4,7 @@ provider:
   name: aws
   region: us-west-1
   runtime: go1.x
-  stage: dev
+  stage: v1
   iam:
     role:
       statements:
@@ -35,11 +35,31 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+    users:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: users
+        AttributeDefinitions:
+          - AttributeName: uid
+            AttributeType: S
+        KeySchema:
+          - AttributeName: uid
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
 
 functions:
-  hello:
+  authorizer:
+    name: ${sls:stage}-authorizer
+    handler: build/authorizer
+    environment:
+      F_TYPE: authorizer
+  book:
     name: ${sls:stage}-books
     handler: build/book
+    environment:
+      F_TYPE: book
     events:
       # Get book by ibsn
       - http:
@@ -56,13 +76,83 @@ functions:
           path: /book
           method: POST
           cors: true
+          authorizer: ${self:custom.authorizer.users}
       # Update a book
       - http:
           path: /book
           method: PATCH
           cors: true
+          authorizer: ${self:custom.authorizer.users}
       # Deletes a book by its ibsn
       - http:
           path: /book/{ibsn}
           method: DELETE
           cors: true
+          authorizer: ${self:custom.authorizer.users}
+  user:
+    name: ${sls:stage}-users
+    handler: build/user
+    environment:
+      F_TYPE: user
+    events:
+      # Get user by uid
+      - http:
+          path: /user/{uid}
+          method: GET
+          cors: true
+      #  Get all users
+      - http:
+          path: /users
+          method: GET
+          cors: true
+          authorizer: ${self:custom.authorizer.users}
+      # Create a user
+      - http:
+          path: /user
+          method: POST
+          cors: true
+      # login
+      - http:
+          path: /login
+          method: POST
+          cors: true
+      # Update a user
+      - http:
+          path: /user
+          method: PATCH
+          cors: true
+          authorizer: ${self:custom.authorizer.users}
+      # Deletes a user by its uid
+      - http:
+          path: /user/{uid}
+          method: DELETE
+          cors: true
+          authorizer: ${self:custom.authorizer.users}
+  book-actions:
+    name: ${sls:stage}-book-actions
+    handler: build/book_actions
+    environment:
+      F_TYPE: book-actions
+    events:
+      # Checkout a book by its isbn
+      - http:
+          path: /checkout/{ibsn}
+          method: POST
+          cors: true
+          authorizer: ${self:custom.authorizer.users}
+      # Return a previously checked out book by ibsn
+      - http:
+          path: /return/{ibsn}
+          method: POST
+          cors: true
+          authorizer: ${self:custom.authorizer.users}
+
+
+custom:
+  authorizer:
+    users:
+      name: authorizer
+      type: TOKEN
+      resultTtlInSeconds: 0
+      identitySource: method.request.header.Authorization
+      identityValidationExpression: Bearer (.*)
