@@ -4,16 +4,22 @@ package book
 // Most raw business logic for books.
 
 import (
+	// "cartercobb/m/pkg/user"
 	"encoding/json"
 	"errors"
-	"time"
-
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
+	"time"
 )
+
+// // Get requesting user
+// usr, err := user.FetchUser(uid, userTable, dynaClient)
+// if err != nil {
+// 	return nil, errors.New(err.Error())
+// }
 
 var (
 	ErrorFailedToUnmarshalRecord = "failed to unmarshal record"
@@ -25,6 +31,7 @@ var (
 	ErrorCouldNotDynamoPutItem   = "could not dynamo put item error"
 	ErrorBookAlreadyExists       = "book.Book already exists"
 	ErrorBookDoesNotExists       = "book.Book does not exist"
+	ErrorBookNotAvailable        = "book.Book does not have sufficient inventory"
 )
 
 type BookState struct {
@@ -32,7 +39,7 @@ type BookState struct {
 	CheckoutDate string `json:"checkoutDate"`
 	Quantity     int    `json:"quantity"`
 	Returned     bool   `json:"returned"`
-	User 		 string `json:"user"`
+	User         string `json:"user"`
 }
 
 type Book struct {
@@ -140,13 +147,20 @@ func UpdateBook(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 		return nil, errors.New(ErrorBookDoesNotExists)
 	}
 	// Keep unmutated properties the same as before
-	if u.Author == "" { u.Author = currentBook.Author }
-	if u.Description == "" { u.Description = currentBook.Description }
-	if u.Inventory == 0 { u.Inventory = currentBook.Inventory }
-	if u.Title == "" { u.Title = currentBook.Title }
+	if u.Author == "" {
+		u.Author = currentBook.Author
+	}
+	if u.Description == "" {
+		u.Description = currentBook.Description
+	}
+	if u.Inventory == 0 {
+		u.Inventory = currentBook.Inventory
+	}
+	if u.Title == "" {
+		u.Title = currentBook.Title
+	}
 	u.UpdatedAt = time.Now().Local().String()
 	u.States = currentBook.States
-		
 
 	// Save Book
 	av, err := dynamodbattribute.MarshalMap(u)
@@ -185,16 +199,68 @@ func DeleteBook(ibsn string, tableName string, dynaClient dynamodbiface.DynamoDB
 	return nil
 }
 
-// TODO: Work in progress
 // Checkout a book and add to its state array.
 // Returns the checked out book
-func CheckoutBook(ibsn string, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (*Book, error) {
+func CheckoutBook(ibsn string, uid string, bookTable string, userTable string, dynaClient dynamodbiface.DynamoDBAPI) (*Book, error) {
 	var u Book
 	// Check if Book exists
-	currentBook, _ := FetchBook(u.IBSN, tableName, dynaClient)
-	if currentBook != nil && len(currentBook.IBSN) == 0 {
+	currentBook, _ := FetchBook(ibsn, bookTable, dynaClient)
+	if currentBook == nil {
 		return nil, errors.New(ErrorBookDoesNotExists)
 	}
+	if currentBook.Inventory-1 < 0 {
+		return nil, errors.New(ErrorBookNotAvailable)
+	}
 
+	u.Author = currentBook.Author
+	u.Description = currentBook.Description
+	u.IBSN = currentBook.IBSN
+	u.Title = currentBook.Title
+	u.UpdatedAt = time.Now().Local().String()
+	u.Inventory = currentBook.Inventory - 1
+
+	var state BookState
+
+	for _, v := range currentBook.States {
+		if v.User == uid {
+			state = v
+			break
+		}
+	}
+
+	if (BookState{} == state) {
+		state.Quantity = 1
+		state.CheckedOut = true
+		state.CheckoutDate = time.Now().Local().String()
+		state.Returned = false
+		state.User = uid
+		u.States = append(currentBook.States, state)
+	} else {
+		var states = currentBook.States
+		for i, v := range states {
+			if v.User == uid {
+				state.Quantity = v.Quantity + 1
+				states = append(states[0:i], states[i+1:]...)
+				break
+			}
+		}
+		u.States = append(states, state)
+	}
+
+	// Save Book
+	av, err := dynamodbattribute.MarshalMap(u)
+	if err != nil {
+		return nil, errors.New(ErrorCouldNotMarshalItem)
+	}
+
+	input := &dynamodb.PutItemInput{
+		Item:      av,
+		TableName: aws.String(bookTable),
+	}
+
+	_, err = dynaClient.PutItem(input)
+	if err != nil {
+		return nil, errors.New(ErrorCouldNotDynamoPutItem)
+	}
 	return &u, nil
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
+	"log"
 	"net/http"
 )
 
@@ -32,9 +33,9 @@ func GetBook(req events.APIGatewayProxyRequest, tableName string, dynaClient dyn
 		if err != nil {
 			return apiResponse(http.StatusBadRequest, ErrorBody{aws.String(err.Error())})
 		}
-    if result == nil {
-      return apiResponse(http.StatusNotFound, nil)
-    }
+		if result == nil {
+			return apiResponse(http.StatusNotFound, nil)
+		}
 
 		return apiResponse(http.StatusOK, result)
 	}
@@ -95,6 +96,44 @@ func DeleteBook(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 	return apiResponse(http.StatusNoContent, nil)
 }
 
+// Checkout a book by its ibsn
+// Requires auth
+// Updates the books inventory and adds to its state array
+func CheckoutBook(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (
+	*events.APIGatewayProxyResponse,
+	error,
+) {
+	ibsn := req.PathParameters["ibsn"]
+	uid := req.RequestContext.Authorizer["uid"]
+	log.Printf("UID: %s; IBSN: %s", uid, ibsn)
+	result, err := book.CheckoutBook(ibsn, uid.(string), "books", "users", dynaClient)
+	if err != nil {
+		return apiResponse(http.StatusBadRequest, ErrorBody{
+			aws.String(err.Error()),
+		})
+	}
+	return apiResponse(http.StatusOK, result)
+}
+
+// Return a book by its ibsn
+// Requires auth
+// Updates the books inventory and adds to its state array
+func ReturnBook(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (
+	*events.APIGatewayProxyResponse,
+	error,
+) {
+	// TODO: implement
+	// ibsn := req.PathParameters["ibsn"]
+	// result, err := book.CheckoutBook(ibsn, tableName, dynaClient)
+	// if err != nil {
+	// 	return apiResponse(http.StatusBadRequest, ErrorBody{
+	// 		aws.String(err.Error()),
+	// 	})
+	// }
+	// return apiResponse(http.StatusOK, result)
+	return apiResponse(http.StatusOK, nil)
+}
+
 // Handles getting one or many users from the database (DynamoDB)
 // if a path parameter is ommited or nil, the function will gather all of the user in the database
 // returns an api response with applicable data
@@ -109,9 +148,9 @@ func GetUser(req events.APIGatewayProxyRequest, tableName string, dynaClient dyn
 		if err != nil {
 			return apiResponse(http.StatusBadRequest, ErrorBody{aws.String(err.Error())})
 		}
-    if result == nil {
-      return apiResponse(http.StatusNotFound, nil)
-    }
+		if result == nil {
+			return apiResponse(http.StatusNotFound, nil)
+		}
 
 		return apiResponse(http.StatusOK, result)
 	}
