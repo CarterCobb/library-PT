@@ -5,6 +5,7 @@ package handlers
     
 import (
   "cartercobb/m/pkg/book"
+  "cartercobb/m/pkg/user"
   "net/http"
   "github.com/aws/aws-lambda-go/events"
   "github.com/aws/aws-sdk-go/aws"
@@ -90,6 +91,81 @@ func DeleteBook(req events.APIGatewayProxyRequest, tableName string, dynaClient 
   }
   return apiResponse(http.StatusNoContent, nil)
 }
+
+// Handles getting one or many users from the database (DynamoDB)
+// if a path parameter is ommited or nil, the function will gather all of the user in the database
+// returns an api response with applicable data
+func GetUser(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (
+  *events.APIGatewayProxyResponse,
+  error,
+) {
+  uid := req.PathParameters["uid"]
+  if len(uid) > 0 {
+	  // Get single user
+	  result, err := user.FetchUser(uid, tableName, dynaClient)
+	  if err != nil {
+		  return apiResponse(http.StatusBadRequest, ErrorBody{aws.String(err.Error())})
+	  }
+
+	  return apiResponse(http.StatusOK, result)
+  }
+  // Get list of users
+  result, err := user.FetchUsers(tableName, dynaClient)
+  if err != nil {
+	  return apiResponse(http.StatusBadRequest, ErrorBody{
+		  aws.String(err.Error()),
+	  })
+  }
+  return apiResponse(http.StatusOK, result)
+}
+
+// Create a user from the request body.
+// returns an api response with applicable data
+func CreateUser(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (
+  *events.APIGatewayProxyResponse,
+  error,
+) {
+  result, err := user.CreateUser(req, tableName, dynaClient)
+  if err != nil {
+	  return apiResponse(http.StatusBadRequest, ErrorBody{
+		  aws.String(err.Error()),
+	  })
+  }
+  return apiResponse(http.StatusCreated, result)
+}
+
+// Update a user by properties passed through body.
+// e.g. pass `uid` to req.Body alongside the properties to update
+// returns an api response with applicable data
+func UpdateUser(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (
+  *events.APIGatewayProxyResponse,
+  error,
+) {
+  result, err := user.UpdateUser(req, tableName, dynaClient)
+  if err != nil {
+	  return apiResponse(http.StatusBadRequest, ErrorBody{
+		  aws.String(err.Error()),
+	  })
+  }
+  return apiResponse(http.StatusOK, result)
+}
+
+// Delete a user by its `uid`
+// returns an api response with applicable data
+func DeleteUser(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (
+  *events.APIGatewayProxyResponse,
+  error,
+) {
+  ibsn := req.PathParameters["uid"]
+  err := user.DeleteUser(ibsn, tableName, dynaClient)
+  if err != nil {
+	  return apiResponse(http.StatusBadRequest, ErrorBody{
+		  aws.String(err.Error()),
+	  })
+  }
+  return apiResponse(http.StatusNoContent, nil)
+}
+
 
 // Handles 405 errors (unsupported methods on the `book` resource)
 // returns an api response with applicable data
