@@ -72,16 +72,19 @@ functions:
           path: /book
           method: POST
           cors: true
+          authorizer: ${self:custom.authorizer.users}
       # Update a book
       - http:
           path: /book
           method: PATCH
           cors: true
+          authorizer: ${self:custom.authorizer.users}
       # Deletes a book by its ibsn
       - http:
           path: /book/{ibsn}
           method: DELETE
           cors: true
+          authorizer: ${self:custom.authorizer.users}
   user:
     name: ${sls:stage}-users
     handler: build/user
@@ -96,6 +99,7 @@ functions:
           path: /users
           method: GET
           cors: true
+          authorizer: ${self:custom.authorizer.users}
       # Create a user
       - http:
           path: /user
@@ -111,20 +115,24 @@ functions:
           path: /user
           method: PATCH
           cors: true
+          authorizer: ${self:custom.authorizer.users}
       # Deletes a user by its uid
       - http:
           path: /user/{uid}
           method: DELETE
           cors: true
+          authorizer: ${self:custom.authorizer.users}
   book-actions:
     name: ${sls:stage}-book-actions
     handler: build/book_actions
     events:
+      # Checkout a book by its isbn
       - http:
           path: /checkout/{ibsn}
           method: POST
           cors: true
           authorizer: ${self:custom.authorizer.users}
+      # Return a previously checked out book by ibsn
       - http:
           path: /return/{ibsn}
           method: POST
@@ -137,5 +145,6 @@ custom:
     users:
       name: authorizer
       type: TOKEN
+      resultTtlInSeconds: 0
       identitySource: method.request.header.Authorization
       identityValidationExpression: Bearer (.*)
