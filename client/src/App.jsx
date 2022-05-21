@@ -10,6 +10,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 // Pages
 const Home = lazy(() => import("./pages/Home"));
+const Book = lazy(() => import("./pages/Book"));
 const BookManagement = lazy(() => import("./pages/BookManagement"));
 const NotAuthorized = lazy(() => import("./pages/NotAuthorized"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -26,6 +27,7 @@ const App = () => {
       <Suspense fallback={fallback}>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/book/:isbn" element={<Book />} />
           <Route
             path="/book-management"
             element={<ProtectedRoute element={BookManagement} />}
