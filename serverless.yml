@@ -4,7 +4,7 @@ provider:
   name: aws
   region: us-west-1
   runtime: go1.x
-  stage: dev
+  stage: v1
   iam:
     role:
       statements:
@@ -35,9 +35,25 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+    users:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: users
+        AttributeDefinitions:
+          - AttributeName: uid
+            AttributeType: S
+        KeySchema:
+          - AttributeName: uid
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
 
 functions:
-  hello:
+  authorizer:
+    name: ${sls:stage}-authorizer
+    handler: build/authorizer
+  book:
     name: ${sls:stage}-books
     handler: build/book
     events:
@@ -66,3 +82,55 @@ functions:
           path: /book/{ibsn}
           method: DELETE
           cors: true
+  user:
+    name: ${sls:stage}-users
+    handler: build/user
+    events:
+      # Get user by uid
+      - http:
+          path: /user/{uid}
+          method: GET
+          cors: true
+      #  Get all users
+      - http:
+          path: /users
+          method: GET
+          cors: true
+      # Create a user
+      - http:
+          path: /user
+          method: POST
+          cors: true
+      # Update a user
+      - http:
+          path: /user
+          method: PATCH
+          cors: true
+      # Deletes a user by its uid
+      - http:
+          path: /user/{uid}
+          method: DELETE
+          cors: true
+  book-actions:
+    name: ${sls:stage}-book-actions
+    handler: build/book_actions
+    events:
+      - http:
+          path: /checkout/{isbn}
+          method: POST
+          cors: true
+          authorizer: ${self:custom.authorizer.users}
+      - http:
+          path: /return/{isbn}
+          method: POST
+          cors: true
+          authorizer: ${self:custom.authorizer.users}
+
+
+custom:
+  authorizer:
+    users:
+      name: authorizer
+      type: TOKEN
+      identitySource: method.request.header.Authorization
+      identityValidationExpression: Bearer (.*)
