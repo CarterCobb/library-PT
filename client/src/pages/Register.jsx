@@ -63,7 +63,7 @@ class Register extends Component {
                 { required: true, message: "Please input your username." },
               ]}
             >
-              <Input placeholder="ISBN" />
+              <Input placeholder="Username" />
             </Form.Item>
             <Form.Item
               label="Password"

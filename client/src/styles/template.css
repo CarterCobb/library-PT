@@ -47,4 +47,7 @@
   .cc-template-header .logo {
     margin-bottom: 30px;
   }
+  .cc-template-header .search {
+    position: relative;
+  }
 }
