@@ -1,0 +1,20 @@
+.cc-register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  min-height: calc(100vh - 250px);
+  background-image: linear-gradient(black, black),
+    url("https://cdn.pixabay.com/photo/2016/01/19/01/42/library-1147815_960_720.jpg");
+  background-size: contain;
+  background-blend-mode: saturation;
+}
+
+.cc-form-container {
+  background-blend-mode: luminosity !important;
+  background: white;
+  padding: 20px;
+  filter: none;
+  min-width: 30%;
+  border-radius: 2px;
+}

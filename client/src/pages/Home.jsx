@@ -6,6 +6,7 @@ import { mapStateToProps } from "../redux/reducer";
 import Template from "../components/Template";
 import "../styles/home.css";
 import BookGrid from "../components/BookGrid";
+import { notification } from "antd";
 
 class HomePage extends Component {
   constructor(props) {
@@ -20,7 +21,7 @@ class HomePage extends Component {
 
   componentDidMount() {
     BookAPI.getAllBooks((books, err) => {
-      if (err) console.log(err);
+      if (err) notification.error({ message: err.error });
       else this.setState({ books });
     });
   }
@@ -29,7 +30,7 @@ class HomePage extends Component {
     console.log("searched", search);
     this.setState({
       search,
-      searchBooks: this.state.books.filter((book) => 
+      searchBooks: this.state.books.filter((book) =>
         JSON.stringify(book).toLowerCase().includes(search.toLowerCase())
       ),
     });
@@ -38,10 +39,7 @@ class HomePage extends Component {
   render() {
     const { books, search, searchBooks } = this.state;
     return (
-      <Template
-        user={this.props.user}
-        onSearch={this.search}
-      >
+      <Template user={this.props.user} onSearch={this.search}>
         <div>
           <section className="cc-section cc-home-video-wrapper">
             <video playsInline autoPlay muted loop id="cc-home-video">

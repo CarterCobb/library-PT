@@ -41,9 +41,7 @@ class Template extends Component {
 
   logout() {
     notification.success({ message: "Logged out" });
-    this.props.dispatch(
-      logout(window.location.pathname === "/book-management")
-    );
+    this.props.dispatch(logout("/"));
   }
 
   render() {
@@ -52,7 +50,9 @@ class Template extends Component {
     return (
       <Fragment>
         <div className="cc-template-header">
-          <img src={Logo} className="logo" />
+          <a href="/">
+            <img src={Logo} className="logo" />
+          </a>
           <div className="cc-template-header-spacer" />
           {window.location.pathname !== "/" ? (
             <Fragment>
@@ -74,9 +74,14 @@ class Template extends Component {
               </Button>
             )}
           {user ? (
-            <Button type="primary" onClick={this.logout}>
-              Log out
-            </Button>
+            <Fragment>
+              <Button type="link" onClick={() => navigate("/account")}>
+                Account
+              </Button>
+              <Button type="primary" onClick={this.logout}>
+                Log out
+              </Button>
+            </Fragment>
           ) : (
             <Button
               type="primary"
@@ -89,8 +94,15 @@ class Template extends Component {
         {children}
         <div className="cc-template-footer">
           <p>
-            This website is a project satisfying a code challenge from
-            Psychology Today.
+            This website is a project satisfying a code challenge from{" "}
+            <a
+              href="https://apply.workable.com/psychology-today/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Psychology Today
+            </a>
+            .
           </p>
           <p>
             To view the source code and/or edit the code yourself vist{" "}
@@ -146,6 +158,13 @@ class Template extends Component {
                 disabled={loading}
               >
                 Login
+              </Button>
+              <Button
+                type="link"
+                htmlType="button"
+                onClick={() => navigate("/register")}
+              >
+                Register Here
               </Button>
             </Form.Item>
           </Form>
