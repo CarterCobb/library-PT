@@ -1,10 +1,14 @@
-import React, { Component } from "react";
+import React, { Component, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import { connect } from "react-redux";
 import { mapStateToProps } from "../redux/reducer";
 import { setUser, logout } from "../redux/types";
 import UserAPI from "../api/user";
 import { ls } from "../App";
+import Logo from "../images/logo.png";
+import { Modal, Button, Form, Input, notification } from "antd";
+import "../styles/template.css";
+import Search from "./Search";
 
 const withNavigate = (Component) => {
   return (props) => <Component {...props} navigate={useNavigate()} />;
@@ -13,20 +17,20 @@ const withNavigate = (Component) => {
 class Template extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      openLogin: false,
+    };
     this.login = this.login.bind(this);
     this.logout = this.logout.bind(this);
   }
 
-  login() {
-    const creds = {
-      username: "ccobb",
-      password: "12345",
-    };
-    UserAPI.login(creds, ({ token, user }, err) => {
-      if (err) console.log(err);
+  login(creds) {
+    UserAPI.login(creds, (data, err) => {
+      if (err) notification.error({ message: err.error });
       else {
-        ls.set("74", token);
-        this.props.dispatch(setUser(user));
+        ls.set("74", data.token);
+        this.setState({ openLogin: false });
+        this.props.dispatch(setUser(data.user));
       }
     });
   }
@@ -37,27 +41,101 @@ class Template extends Component {
 
   render() {
     const { navigate, user, children } = this.props;
+    const { openLogin } = this.state;
     return (
-      <div>
-        <h1>Libary Management</h1>
-        {window.location.pathname !== "/" && (
-          <button onClick={() => navigate("/")}>Home</button>
-        )}
-        {user ? (
-          <button onClick={this.logout}>Logout</button>
-        ) : (
-          <button onClick={this.login}>Login</button>
-        )}
-        {user &&
-          user.role === "LIBRARIAN" &&
-          window.location.pathname !== "/book-management" && (
-            <button onClick={() => navigate("/book-management")}>
-              Book Management
-            </button>
+      <Fragment>
+        <div className="cc-template-header">
+          <img src={Logo} className="logo" />
+          <div className="cc-template-header-spacer"/>
+          {window.location.pathname !== "/" ? (
+            <Fragment>
+              <div className="search" />
+              <Button type="link" onClick={() => navigate("/")}>
+                Home
+              </Button>
+            </Fragment>
+          ) : (
+            <div className="search">
+              <Search onSubmit={this.props.onSearch} />
+            </div>
           )}
+          {user &&
+            user.role === "LIBRARIAN" &&
+            window.location.pathname !== "/book-management" && (
+              <Button type="link" onClick={() => navigate("/book-management")}>
+                Book Management
+              </Button>
+            )}
+          {user ? (
+            <Button type="primary" onClick={this.logout}>
+              Log out
+            </Button>
+          ) : (
+            <Button
+              type="primary"
+              onClick={() => this.setState({ openLogin: true })}
+            >
+              Login
+            </Button>
+          )}
+        </div>
         {children}
-        <h1>Footer</h1>
-      </div>
+        <div className="cc-template-footer">
+          <p>
+            This website is a project satisfying a code challenge from
+            Psychology Today.
+          </p>
+          <p>
+            To view the source code and/or edit the code yourself vist{" "}
+            <a href="https://github.com/CarterCobb/library-PT">
+              GitHub: CarterCobb/library-PT
+            </a>
+            .
+          </p>
+          <p>Built by <a href="https://linktr.ee/cjcobb">Carter Cobb</a>. &copy; 2022.</p>
+        </div>
+
+        <Modal
+          title="Login"
+          centered
+          visible={openLogin}
+          onCancel={() => this.setState({ openLogin: false })}
+          footer={null}
+        >
+          <Form
+            name="basic"
+            initialValues={{ remember: true }}
+            onFinish={this.login}
+            autoComplete="off"
+          >
+            <Form.Item
+              label="Username"
+              name="username"
+              rules={[
+                { required: true, message: "Please input your username!" },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item
+              label="Password"
+              name="password"
+              rules={[
+                { required: true, message: "Please input your password!" },
+              ]}
+            >
+              <Input.Password />
+            </Form.Item>
+
+            <Form.Item>
+              <Button type="primary" htmlType="submit">
+                Login
+              </Button>
+            </Form.Item>
+          </Form>
+        </Modal>
+      </Fragment>
     );
   }
 }
