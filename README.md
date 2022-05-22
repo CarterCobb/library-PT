@@ -25,6 +25,11 @@ This repo contains a serverless REST API and frontend to manage library books.
 - [GitHub Actions](https://github.com/features/actions)
   - See the workflow for this repo [here](https://github.com/CarterCobb/library-PT/blob/main/.github/workflows/main.yml)
 
+### Others
+
+- [React Redux](https://react-redux.js.org/)
+- [Ant Design](https://ant.design/)
+
 ## Requirements
 
 Using whichever language(s)/stack that is best suited, create a library management system per the requirements below. Please submit your code via a publicly available repository.
