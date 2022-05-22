@@ -1,15 +1,21 @@
 import React, { Component } from "react";
 import BookAPI from "../api/book";
+import Home from "../images/home.mp4";
 import { connect } from "react-redux";
 import { mapStateToProps } from "../redux/reducer";
 import Template from "../components/Template";
+import "../styles/home.css";
+import BookGrid from "../components/BookGrid";
 
 class HomePage extends Component {
   constructor(props) {
     super(props);
     this.state = {
       books: [],
+      search: "",
+      searchBooks: [],
     };
+    this.search = this.search.bind(this);
   }
 
   componentDidMount() {
@@ -19,14 +25,40 @@ class HomePage extends Component {
     });
   }
 
+  search(search) {
+    console.log("searched", search);
+    this.setState({
+      search,
+      searchBooks: this.state.books.filter((book) => 
+        JSON.stringify(book).toLowerCase().includes(search.toLowerCase())
+      ),
+    });
+  }
 
   render() {
+    const { books, search, searchBooks } = this.state;
     return (
-      <Template user={this.props.user}>
+      <Template
+        user={this.props.user}
+        onSearch={this.search}
+      >
         <div>
-          <h1>Home Page</h1>
-          <h3>Books:</h3>
-          <pre>{JSON.stringify(this.state.books, null, 2)}</pre>
+          <section className="cc-section cc-home-video-wrapper">
+            <video playsInline autoPlay muted loop id="cc-home-video">
+              <source src={Home} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+            <div className="cc-video-header">
+              <h1 id="cc-header-text">Fancy Place Library</h1>
+              <p id="cc-header-sub-text">
+                Explore endless adventures through books!
+              </p>
+            </div>
+            <div className="cc-header-skewed-right" />
+            <div className="cc-header-skewed-left" />
+          </section>
+          <h1 className="cc-books-header">Our Books:</h1>
+          <BookGrid books={search !== "" ? searchBooks : books} />
         </div>
       </Template>
     );
