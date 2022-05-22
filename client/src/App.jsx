@@ -13,6 +13,7 @@ const Home = lazy(() => import("./pages/Home"));
 const Book = lazy(() => import("./pages/Book"));
 const BookManagement = lazy(() => import("./pages/BookManagement"));
 const Register = lazy(() => import("./pages/Register"));
+const Account = lazy(() => import("./pages/Account"));
 const NotAuthorized = lazy(() => import("./pages/NotAuthorized"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -30,6 +31,7 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/book/:isbn" element={<Book />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/account" element={<Account />} />
           <Route
             path="/book-management"
             element={<ProtectedRoute element={BookManagement} />}
