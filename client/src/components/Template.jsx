@@ -40,6 +40,7 @@ class Template extends Component {
   }
 
   logout() {
+    notification.success({message: "Logged out"})
     this.props.dispatch(logout());
   }
 
