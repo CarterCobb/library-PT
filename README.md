@@ -2,7 +2,7 @@
 
 This repo contains a serverless REST API and frontend to manage library books.
 
-**The LTS version of this project is on the [main branch](https://github.com/CarterCobb/library-PT) _Newest features on the [development branch](https://github.com/CarterCobb/library-PT/tree/development)_**
+**The LTS version of this project is on the [main branch](https://github.com/CarterCobb/library-PT). _Newest features on the [development branch](https://github.com/CarterCobb/library-PT/tree/development)_**
 
 ## Technology Stack
 
