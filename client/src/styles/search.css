@@ -61,10 +61,20 @@
 }
 
 .cc-search-icon.open {
-    margin-right: 10px;
-
+  margin-right: 10px;
 }
 
 .cc-search-icon:hover {
   color: #393e46;
+}
+
+@media (max-width: 800px) {
+  .cc-search {
+    width: 40%;
+    border: 1px solid #1890ff;
+    align-items: flex-end;
+  }
+  .cc-search-icon {
+    margin-right: 10px;
+  }
 }
