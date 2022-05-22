@@ -47,7 +47,7 @@ const BookGrid = ({ books }) => {
       {books
         .sort(() => 0.5 - Math.random())
         .map((book) => (
-          <BookCard book={book} key={book.id} />
+          <BookCard book={book} key={book.id} key={book.isbn}/>
         ))}
     </div>
   );
