@@ -41,9 +41,8 @@ class Template extends Component {
 
   logout() {
     notification.success({ message: "Logged out" });
-    this.props.dispatch(
-      logout(window.location.pathname === "/book-management")
-    );
+    const path = window.location.pathname;
+    this.props.dispatch(logout(window.location.pathname));
   }
 
   render() {
@@ -89,8 +88,15 @@ class Template extends Component {
         {children}
         <div className="cc-template-footer">
           <p>
-            This website is a project satisfying a code challenge from
-            Psychology Today.
+            This website is a project satisfying a code challenge from{" "}
+            <a
+              href="https://apply.workable.com/psychology-today/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Psychology Today
+            </a>
+            .
           </p>
           <p>
             To view the source code and/or edit the code yourself vist{" "}
@@ -146,6 +152,13 @@ class Template extends Component {
                 disabled={loading}
               >
                 Login
+              </Button>
+              <Button
+                type="link"
+                htmlType="button"
+                onClick={() => navigate("/register")}
+              >
+                Register Here
               </Button>
             </Form.Item>
           </Form>
