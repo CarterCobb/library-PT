@@ -19,17 +19,21 @@ class Template extends Component {
     super(props);
     this.state = {
       openLogin: false,
+      loading: false,
     };
     this.login = this.login.bind(this);
     this.logout = this.logout.bind(this);
   }
 
   login(creds) {
+    this.setState({ loading: true });
     UserAPI.login(creds, (data, err) => {
-      if (err) notification.error({ message: err.error });
-      else {
+      if (err) {
+        notification.error({ message: err.error });
+        this.setState({ loading: false });
+      } else {
         ls.set("74", data.token);
-        this.setState({ openLogin: false });
+        this.setState({ openLogin: false, loading: false });
         this.props.dispatch(setUser(data.user));
       }
     });
@@ -41,12 +45,12 @@ class Template extends Component {
 
   render() {
     const { navigate, user, children } = this.props;
-    const { openLogin } = this.state;
+    const { openLogin, loading } = this.state;
     return (
       <Fragment>
         <div className="cc-template-header">
           <img src={Logo} className="logo" />
-          <div className="cc-template-header-spacer"/>
+          <div className="cc-template-header-spacer" />
           {window.location.pathname !== "/" ? (
             <Fragment>
               <div className="search" />
@@ -92,7 +96,10 @@ class Template extends Component {
             </a>
             .
           </p>
-          <p>Built by <a href="https://linktr.ee/cjcobb">Carter Cobb</a>. &copy; 2022.</p>
+          <p>
+            Built by <a href="https://linktr.ee/cjcobb">Carter Cobb</a>. &copy;
+            2022.
+          </p>
         </div>
 
         <Modal
@@ -101,35 +108,40 @@ class Template extends Component {
           visible={openLogin}
           onCancel={() => this.setState({ openLogin: false })}
           footer={null}
+          width={300}
         >
           <Form
-            name="basic"
+            name="normal_login"
             initialValues={{ remember: true }}
             onFinish={this.login}
             autoComplete="off"
+            layout="vertical"
           >
             <Form.Item
-              label="Username"
               name="username"
               rules={[
                 { required: true, message: "Please input your username!" },
               ]}
             >
-              <Input />
+              <Input placeholder="Username" />
             </Form.Item>
 
             <Form.Item
-              label="Password"
               name="password"
               rules={[
                 { required: true, message: "Please input your password!" },
               ]}
             >
-              <Input.Password />
+              <Input.Password placeholder="Password" />
             </Form.Item>
 
             <Form.Item>
-              <Button type="primary" htmlType="submit">
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                disabled={loading}
+              >
                 Login
               </Button>
             </Form.Item>
