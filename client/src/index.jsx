@@ -6,6 +6,7 @@ import ErrorBoundary from "./code-spliting/error-boundary";
 import { legacy_createStore } from "redux";
 import { Provider } from "react-redux";
 import { reducer } from "./redux/reducer";
+import "antd/dist/antd.css";
 
 const store = legacy_createStore(reducer);
 
