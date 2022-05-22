@@ -12,11 +12,11 @@ const store = legacy_createStore(reducer);
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-  <React.StrictMode>
+  <React.Fragment>
     <ErrorBoundary>
       <Provider store={store}>
         <App />
       </Provider>
     </ErrorBoundary>
-  </React.StrictMode>
+  </React.Fragment>
 );
