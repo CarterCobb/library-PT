@@ -41,8 +41,7 @@ class Template extends Component {
 
   logout() {
     notification.success({ message: "Logged out" });
-    const path = window.location.pathname;
-    this.props.dispatch(logout(window.location.pathname));
+    this.props.dispatch(logout("/"));
   }
 
   render() {
@@ -51,7 +50,9 @@ class Template extends Component {
     return (
       <Fragment>
         <div className="cc-template-header">
-          <img src={Logo} className="logo" />
+          <a href="/">
+            <img src={Logo} className="logo" />
+          </a>
           <div className="cc-template-header-spacer" />
           {window.location.pathname !== "/" ? (
             <Fragment>
@@ -73,9 +74,14 @@ class Template extends Component {
               </Button>
             )}
           {user ? (
-            <Button type="primary" onClick={this.logout}>
-              Log out
-            </Button>
+            <Fragment>
+              <Button type="link" onClick={() => navigate("/account")}>
+                Account
+              </Button>
+              <Button type="primary" onClick={this.logout}>
+                Log out
+              </Button>
+            </Fragment>
           ) : (
             <Button
               type="primary"
