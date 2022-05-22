@@ -8,8 +8,10 @@
 }
 
 .cc-template-header .logo {
+  cursor: pointer;
   width: 120px;
   height: auto;
+  margin-bottom: unset;
 }
 
 .cc-template-header-spacer {
@@ -41,5 +43,8 @@
   }
   .cc-template-header .search {
     margin: 10px;
+  }
+  .cc-template-header .logo {
+    margin-bottom: 30px;
   }
 }
