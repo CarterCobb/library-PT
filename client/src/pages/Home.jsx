@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import BookAPI from "../api/book";
-import Home from "../images/home.mp4";
 import { connect } from "react-redux";
 import { mapStateToProps } from "../redux/reducer";
 import Template from "../components/Template";
@@ -43,7 +42,7 @@ class HomePage extends Component {
         <div>
           <section className="cc-section cc-home-video-wrapper">
             <video playsInline autoPlay muted loop id="cc-home-video">
-              <source src={Home} type="video/mp4" />
+              <source src="https://adderu.s3.us-west-1.amazonaws.com/home.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
             <div className="cc-video-header">
