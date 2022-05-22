@@ -19,6 +19,7 @@ import {
   DeleteOutlined,
   PlusOutlined,
   SaveOutlined,
+  LinkOutlined
 } from "@ant-design/icons";
 import JsZip from "jszip";
 import { saveAs } from "file-saver";
@@ -175,7 +176,8 @@ class BookManagement extends Component {
                   <List.Item.Meta
                     title={
                       <a href={`/book/${book.isbn}`} target="_blank">
-                        {book.title}
+                        {book.title}&nbsp;
+                        <LinkOutlined/>
                       </a>
                     }
                     description={book.description}
