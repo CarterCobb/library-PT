@@ -1,0 +1,46 @@
+.cc-template-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  background: white;
+  padding: 10px 50px 10px 20px;
+}
+
+.cc-template-header .logo {
+  width: 120px;
+  height: auto;
+}
+
+.cc-template-header-spacer {
+  flex-grow: 1;
+}
+
+.cc-template-header .search {
+  position: absolute;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cc-template-footer {
+  margin-top: 30px;
+  width: 100%;
+  min-height: 200px;
+  background-color: rgb(61, 61, 61);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  color: lightgrey;
+}
+
+@media (max-width: 800px) {
+  .cc-template-header {
+    flex-direction: column;
+  }
+  .cc-template-header .search {
+    margin: 10px;
+  }
+}

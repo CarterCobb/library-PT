@@ -20,7 +20,7 @@ var (
 	ErrorFailedToUnmarshalRecord = "failed to unmarshal record"
 	ErrorFailedToFetchRecord     = "failed to fetch record"
 	ErrorInvalidBookData         = "invalid book data"
-	ErrorInvalidIBSN             = "invalid IBSN"
+	ErrorInvalidISBN             = "invalid ISBN"
 	ErrorCouldNotMarshalItem     = "could not marshal item"
 	ErrorCouldNotDeleteItem      = "could not delete item"
 	ErrorCouldNotDynamoPutItem   = "could not dynamo put item error"
@@ -41,9 +41,10 @@ type BookState struct {
 }
 
 type Book struct {
-	IBSN        string      `json:"ibsn"`
+	ISBN        string      `json:"isbn"`
 	Title       string      `json:"title"`
 	Author      string      `json:"author"`
+	Image       string      `json:"image"`
 	Description string      `json:"description"`
 	Inventory   int         `json:"inventory"`
 	States      []BookState `json:"states"`
@@ -52,11 +53,11 @@ type Book struct {
 
 // Handles getting one book from the database (DynamoDB)
 // returns the book or nil
-func FetchBook(ibsn, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (*Book, error) {
+func FetchBook(isbn, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (*Book, error) {
 	input := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
-			"ibsn": {
-				S: aws.String(ibsn),
+			"isbn": {
+				S: aws.String(isbn),
 			},
 		},
 		TableName: aws.String(tableName),
@@ -72,7 +73,7 @@ func FetchBook(ibsn, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (*B
 	if err != nil {
 		return nil, errors.New(ErrorFailedToUnmarshalRecord)
 	}
-	if item.IBSN == "" {
+	if item.ISBN == "" {
 		return nil, nil
 	}
 	return item, nil
@@ -112,8 +113,8 @@ func CreateBook(req events.APIGatewayProxyRequest, uid string, bookTable string,
 		return nil, errors.New(ErrorInvalidBookData)
 	}
 	// Check if Book exists
-	currentBook, _ := FetchBook(u.IBSN, bookTable, dynaClient)
-	if currentBook != nil && len(currentBook.IBSN) != 0 {
+	currentBook, _ := FetchBook(u.ISBN, bookTable, dynaClient)
+	if currentBook != nil && len(currentBook.ISBN) != 0 {
 		return nil, errors.New(ErrorBookAlreadyExists)
 	}
 	// Save Book
@@ -136,7 +137,7 @@ func CreateBook(req events.APIGatewayProxyRequest, uid string, bookTable string,
 }
 
 // Update a book by properties passed through body.
-// e.g. pass `ibsn` to req.Body alongside the properties to update
+// e.g. pass `isbn` to req.Body alongside the properties to update
 // returns updated book or nil
 func UpdateBook(req events.APIGatewayProxyRequest, uid string, bookTable string, usersTable string, dynaClient dynamodbiface.DynamoDBAPI) (
 	*Book,
@@ -152,12 +153,12 @@ func UpdateBook(req events.APIGatewayProxyRequest, uid string, bookTable string,
 	}
 	var u Book
 	if err := json.Unmarshal([]byte(req.Body), &u); err != nil {
-		return nil, errors.New(ErrorInvalidIBSN)
+		return nil, errors.New(ErrorInvalidISBN)
 	}
 
 	// Check if Book exists
-	currentBook, _ := FetchBook(u.IBSN, bookTable, dynaClient)
-	if currentBook != nil && len(currentBook.IBSN) == 0 {
+	currentBook, _ := FetchBook(u.ISBN, bookTable, dynaClient)
+	if currentBook != nil && len(currentBook.ISBN) == 0 {
 		return nil, errors.New(ErrorBookDoesNotExists)
 	}
 	// Keep unmutated properties the same as before
@@ -172,6 +173,9 @@ func UpdateBook(req events.APIGatewayProxyRequest, uid string, bookTable string,
 	}
 	if u.Title == "" {
 		u.Title = currentBook.Title
+	}
+	if u.Image == "" {
+		u.Image = currentBook.Image
 	}
 	u.UpdatedAt = time.Now().Local().String()
 	u.States = currentBook.States
@@ -194,9 +198,9 @@ func UpdateBook(req events.APIGatewayProxyRequest, uid string, bookTable string,
 	return &u, nil
 }
 
-// Delete a book by its `ibsn`
+// Delete a book by its `isbn`
 // returns nil (204 No Content)
-func DeleteBook(ibsn string, uid string, bookTable string, usersTable string, dynaClient dynamodbiface.DynamoDBAPI) error {
+func DeleteBook(isbn string, uid string, bookTable string, usersTable string, dynaClient dynamodbiface.DynamoDBAPI) error {
 	// Validate librarian user
 	usr, err := user.FetchUser(uid, usersTable, dynaClient)
 	if err != nil {
@@ -207,8 +211,8 @@ func DeleteBook(ibsn string, uid string, bookTable string, usersTable string, dy
 	}
 	input := &dynamodb.DeleteItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
-			"ibsn": {
-				S: aws.String(ibsn),
+			"isbn": {
+				S: aws.String(isbn),
 			},
 		},
 		TableName: aws.String(bookTable),
@@ -223,10 +227,10 @@ func DeleteBook(ibsn string, uid string, bookTable string, usersTable string, dy
 
 // Checkout a book and add to its state array.
 // Returns the checked out book
-func CheckoutBook(ibsn string, uid string, bookTable string, userTable string, dynaClient dynamodbiface.DynamoDBAPI) (*Book, error) {
+func CheckoutBook(isbn string, uid string, bookTable string, userTable string, dynaClient dynamodbiface.DynamoDBAPI) (*Book, error) {
 	var u Book
 	// Check if Book exists
-	currentBook, _ := FetchBook(ibsn, bookTable, dynaClient)
+	currentBook, _ := FetchBook(isbn, bookTable, dynaClient)
 	if currentBook == nil {
 		return nil, errors.New(ErrorBookDoesNotExists)
 	}
@@ -236,8 +240,9 @@ func CheckoutBook(ibsn string, uid string, bookTable string, userTable string, d
 
 	u.Author = currentBook.Author
 	u.Description = currentBook.Description
-	u.IBSN = currentBook.IBSN
+	u.ISBN = currentBook.ISBN
 	u.Title = currentBook.Title
+	u.Image = currentBook.Image
 	u.UpdatedAt = time.Now().Local().String()
 	u.Inventory = currentBook.Inventory - 1
 
@@ -290,10 +295,10 @@ func CheckoutBook(ibsn string, uid string, bookTable string, userTable string, d
 // Return a book that was previously checkoued out and add to its state array.
 // Book must reflect a state where the requesting user checked out a book.
 // Returns the checked out book
-func ReturnBook(ibsn string, uid string, bookTable string, userTable string, dynaClient dynamodbiface.DynamoDBAPI) (*Book, error) {
+func ReturnBook(isbn string, uid string, bookTable string, userTable string, dynaClient dynamodbiface.DynamoDBAPI) (*Book, error) {
 	var u Book
 	// Check if Book exists
-	currentBook, _ := FetchBook(ibsn, bookTable, dynaClient)
+	currentBook, _ := FetchBook(isbn, bookTable, dynaClient)
 	if currentBook == nil {
 		return nil, errors.New(ErrorBookDoesNotExists)
 	}
@@ -337,8 +342,9 @@ func ReturnBook(ibsn string, uid string, bookTable string, userTable string, dyn
 
 	u.Author = currentBook.Author
 	u.Description = currentBook.Description
-	u.IBSN = currentBook.IBSN
+	u.ISBN = currentBook.ISBN
 	u.Title = currentBook.Title
+	u.Image = currentBook.Image
 	u.UpdatedAt = time.Now().Local().String()
 	u.Inventory = currentBook.Inventory + 1
 

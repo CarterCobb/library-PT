@@ -25,10 +25,10 @@ func GetBook(req events.APIGatewayProxyRequest, tableName string, dynaClient dyn
 	*events.APIGatewayProxyResponse,
 	error,
 ) {
-	ibsn := req.PathParameters["ibsn"]
-	if len(ibsn) > 0 {
+	isbn := req.PathParameters["isbn"]
+	if len(isbn) > 0 {
 		// Get single book
-		result, err := book.FetchBook(ibsn, tableName, dynaClient)
+		result, err := book.FetchBook(isbn, tableName, dynaClient)
 		if err != nil {
 			return apiResponse(http.StatusBadRequest, ErrorBody{aws.String(err.Error())})
 		}
@@ -65,7 +65,7 @@ func CreateBook(req events.APIGatewayProxyRequest, bookTable string, usersTable 
 }
 
 // Update a book by properties passed through body.
-// e.g. pass `ibsn` to req.Body alongside the properties to update
+// e.g. pass `isbn` to req.Body alongside the properties to update
 // returns an api response with applicable data
 func UpdateBook(req events.APIGatewayProxyRequest, bookTable string, usersTable string, dynaClient dynamodbiface.DynamoDBAPI) (
 	*events.APIGatewayProxyResponse,
@@ -81,15 +81,15 @@ func UpdateBook(req events.APIGatewayProxyRequest, bookTable string, usersTable 
 	return apiResponse(http.StatusOK, result)
 }
 
-// Delete a book by its `ibsn`
+// Delete a book by its `isbn`
 // returns an api response with applicable data
 func DeleteBook(req events.APIGatewayProxyRequest, bookTable string, usersTable string, dynaClient dynamodbiface.DynamoDBAPI) (
 	*events.APIGatewayProxyResponse,
 	error,
 ) {
-	ibsn := req.PathParameters["ibsn"]
+	isbn := req.PathParameters["isbn"]
 	uid := req.RequestContext.Authorizer["uid"]
-	err := book.DeleteBook(ibsn, uid.(string), bookTable, usersTable, dynaClient)
+	err := book.DeleteBook(isbn, uid.(string), bookTable, usersTable, dynaClient)
 	if err != nil {
 		return apiResponse(http.StatusBadRequest, ErrorBody{
 			aws.String(err.Error()),
@@ -98,16 +98,16 @@ func DeleteBook(req events.APIGatewayProxyRequest, bookTable string, usersTable 
 	return apiResponse(http.StatusNoContent, nil)
 }
 
-// Checkout a book by its ibsn
+// Checkout a book by its isbn
 // Requires auth
 // Updates the books inventory and adds to its state array
 func CheckoutBook(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (
 	*events.APIGatewayProxyResponse,
 	error,
 ) {
-	ibsn := req.PathParameters["ibsn"]
+	isbn := req.PathParameters["isbn"]
 	uid := req.RequestContext.Authorizer["uid"]
-	result, err := book.CheckoutBook(ibsn, uid.(string), "books", "users", dynaClient)
+	result, err := book.CheckoutBook(isbn, uid.(string), "books", "users", dynaClient)
 	if err != nil {
 		return apiResponse(http.StatusBadRequest, ErrorBody{
 			aws.String(err.Error()),
@@ -116,16 +116,16 @@ func CheckoutBook(req events.APIGatewayProxyRequest, tableName string, dynaClien
 	return apiResponse(http.StatusOK, result)
 }
 
-// Return a book by its ibsn
+// Return a book by its isbn
 // Requires auth
 // Updates the books inventory and adds to its state array
 func ReturnBook(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (
 	*events.APIGatewayProxyResponse,
 	error,
 ) {
-	ibsn := req.PathParameters["ibsn"]
+	isbn := req.PathParameters["isbn"]
 	uid := req.RequestContext.Authorizer["uid"]
-	result, err := book.ReturnBook(ibsn, uid.(string), "books", "users", dynaClient)
+	result, err := book.ReturnBook(isbn, uid.(string), "books", "users", dynaClient)
 	if err != nil {
 		return apiResponse(http.StatusBadRequest, ErrorBody{
 			aws.String(err.Error()),

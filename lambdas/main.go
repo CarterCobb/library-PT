@@ -25,6 +25,8 @@ const bookTable = "books"
 const usersTable = "users"
 const jwtSecret = "jysyVggrzwwioncbTAGckMSGsyZizuXtlSTkyKojvtDSWYLDCTeRkpjaInxBvJtHxAKtSvRYuSTJrvPQceMwcUPpBAKKnjLnQvFI"
 
+// Handles the user resource API interactions
+// returns a function handler that includes a proper lambda response
 func UserHandler(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	switch req.HTTPMethod {
 	case "GET":
@@ -43,6 +45,8 @@ func UserHandler(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 	}
 }
 
+// Handles the book resource API interactions
+// returns a function handler that includes a proper lambda response
 func BookHandler(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	switch req.HTTPMethod {
 	case "GET":
@@ -58,6 +62,9 @@ func BookHandler(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 	}
 }
 
+// Handles the specific book resource interactions;
+// specifically checkin and checkout books
+// returns a function handler that includes a proper lambda response
 func BookActionsHandler(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	switch req.HTTPMethod {
 	case "POST":
@@ -70,6 +77,8 @@ func BookActionsHandler(req events.APIGatewayProxyRequest) (*events.APIGatewayPr
 	}
 }
 
+// Default handler to return basic response when basica criteria not met
+// returns a function handler that includes a proper lambda response
 func UnKnownHandler(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	return handlers.UnhandledMethod()
 }
@@ -98,6 +107,8 @@ func main() {
 	}
 }
 
+// Generates a API Custom Authorizer policy for authenticating a user.
+// returns APIGatewayCustomAuthorizerResponse
 func generatePolicy(principalId, uid string, effect, resource string) events.APIGatewayCustomAuthorizerResponse {
 	authResponse := events.APIGatewayCustomAuthorizerResponse{PrincipalID: principalId}
 
@@ -120,6 +131,8 @@ func generatePolicy(principalId, uid string, effect, resource string) events.API
 	return authResponse
 }
 
+// Handles the authorizer lambda
+// returns a function handler that includes a proper lambda response
 func HandleAuthorize(ctx context.Context, event events.APIGatewayCustomAuthorizerRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 	token := strings.Split(event.AuthorizationToken, " ")[1]
 	token_parsed, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {

@@ -46,6 +46,7 @@ type User struct {
 
 type Token struct {
 	Token string `json:"token"`
+	User  User   `json:"user"`
 }
 
 // Handles getting one user from the database (DynamoDB)
@@ -263,6 +264,7 @@ func Login(req events.APIGatewayProxyRequest, tableName string, dynaClient dynam
 				return nil, errors.New(ErrorInvalidUserData)
 			}
 			u.Token = tokenString
+			u.User = value
 			return &u, nil
 		}
 	}

@@ -17,12 +17,18 @@ This repo contains a serverless REST API and frontend to manage library books.
   - [AWS Lambda](https://aws.amazon.com/lambda/)
   - [AWS API Gateway](https://aws.amazon.com/api-gateway/)
   - [AWS DynamoDB](https://aws.amazon.com/dynamodb/)
+  - [AWS Amplify](https://aws.amazon.com/amplify/)
 
 ### CI/CD
 
 - Infrastructure: [Serverless Framework](https://www.serverless.com/)
 - [GitHub Actions](https://github.com/features/actions)
   - See the workflow for this repo [here](https://github.com/CarterCobb/library-PT/blob/main/.github/workflows/main.yml)
+
+### Others
+
+- [React Redux](https://react-redux.js.org/)
+- [Ant Design](https://ant.design/)
 
 ## Requirements
 
