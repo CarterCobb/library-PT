@@ -41,7 +41,7 @@
 }
 
 .cc-checkout-btn-bar .btn {
-    margin: 10px;
+  margin: 10px;
 }
 
 .cc-checkout-btn-bar.login {
@@ -50,8 +50,17 @@
 }
 
 .cc-book-err-text {
-    margin: unset;
-    color: maroon;
+  margin: unset;
+  color: maroon;
+}
+
+.cc-blank-book-grid {
+  min-height: calc(100vh - 300px);
+}
+
+.cc-account-book-grid {
+  align-items: flex-start;
+  min-height: calc(100vh - 300px);
 }
 
 @media (max-width: 800px) {

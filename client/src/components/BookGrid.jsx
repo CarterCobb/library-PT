@@ -1,5 +1,8 @@
 import React from "react";
 import { useSpring, animated } from "@react-spring/web";
+import { List } from "antd";
+import "../styles/home.css";
+import "../styles/book.css";
 
 const BookCard = ({ book }) => {
   const [props, set] = useSpring(() => ({
@@ -32,23 +35,26 @@ const BookCard = ({ book }) => {
       <div className="cc-book-card">
         <img src={book.image} />
         <h3>{book.title}</h3>
-        
+
         <p className="desc">{book.description}</p>
-        <p>ISBN:{" "}{book.isbn}</p>
+        <p>ISBN: {book.isbn}</p>
       </div>
       {/* END CUSTOM */}
     </animated.a>
   );
 };
 
-const BookGrid = ({ books }) => {
+const BookGrid = ({ books, account }) => {
   return (
-    <div className="book-grid-container">
+    <div className={`book-grid-container ${account && "cc-account-book-grid"}`}>
       {books
         .sort(() => 0.5 - Math.random())
         .map((book) => (
-          <BookCard book={book} key={book.isbn}/>
+          <BookCard book={book} key={book.isbn} />
         ))}
+      {books.length === 0 && (
+        <List size="large" dataSource={[]} className="cc-blank-book-grid" />
+      )}
     </div>
   );
 };
