@@ -20,6 +20,7 @@ export const reducer = (state = initialState, action) => {
     case "LOGOUT": {
       ls.remove("74");
       ls.remove("_4144444552555f55534552");
+      if (action.payload) window.location.href = "/";
       return initialState;
     }
     default: {

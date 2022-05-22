@@ -40,8 +40,10 @@ class Template extends Component {
   }
 
   logout() {
-    notification.success({message: "Logged out"})
-    this.props.dispatch(logout());
+    notification.success({ message: "Logged out" });
+    this.props.dispatch(
+      logout(window.location.pathname === "/book-management")
+    );
   }
 
   render() {
