@@ -44,6 +44,7 @@ type Book struct {
 	ISBN        string      `json:"isbn"`
 	Title       string      `json:"title"`
 	Author      string      `json:"author"`
+	Image       string      `json:"image"`
 	Description string      `json:"description"`
 	Inventory   int         `json:"inventory"`
 	States      []BookState `json:"states"`
@@ -173,6 +174,9 @@ func UpdateBook(req events.APIGatewayProxyRequest, uid string, bookTable string,
 	if u.Title == "" {
 		u.Title = currentBook.Title
 	}
+	if u.Image == "" {
+		u.Image = currentBook.Image
+	}
 	u.UpdatedAt = time.Now().Local().String()
 	u.States = currentBook.States
 
@@ -238,6 +242,7 @@ func CheckoutBook(isbn string, uid string, bookTable string, userTable string, d
 	u.Description = currentBook.Description
 	u.ISBN = currentBook.ISBN
 	u.Title = currentBook.Title
+	u.Image = currentBook.Image
 	u.UpdatedAt = time.Now().Local().String()
 	u.Inventory = currentBook.Inventory - 1
 
@@ -339,6 +344,7 @@ func ReturnBook(isbn string, uid string, bookTable string, userTable string, dyn
 	u.Description = currentBook.Description
 	u.ISBN = currentBook.ISBN
 	u.Title = currentBook.Title
+	u.Image = currentBook.Image
 	u.UpdatedAt = time.Now().Local().String()
 	u.Inventory = currentBook.Inventory + 1
 
