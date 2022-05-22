@@ -46,7 +46,7 @@ export default class UserAPI {
       const register = await axios.post(`${api}/user`, JSON.stringify(user), {
         headers: { "Content-Type": "application/json" },
       });
-      if (register.status === 200) return cb(register, null);
+      if (register.status === 201) return cb(register.data, null);
       else return cb(null, register.data);
     } catch (err) {
       return handleErrorWData(err, cb);
