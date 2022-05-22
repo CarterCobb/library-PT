@@ -266,7 +266,11 @@ func CheckoutBook(isbn string, uid string, bookTable string, userTable string, d
 		var states = currentBook.States
 		for i, v := range states {
 			if v.User == uid {
-				state.Quantity = v.Quantity + 1
+				state.Quantity = v.Quantity + 1		
+				state.CheckedOut = true
+				state.CheckoutDate = time.Now().Local().String()
+				state.Returned = false
+				state.User = uid
 				states = append(states[0:i], states[i+1:]...)
 				break
 			}
