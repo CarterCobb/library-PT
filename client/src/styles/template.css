@@ -27,6 +27,7 @@
 }
 
 .cc-template-footer {
+  padding: 20px;
   width: 100%;
   min-height: 200px;
   background-color: rgb(61, 61, 61);
@@ -35,11 +36,13 @@
   align-items: center;
   flex-direction: column;
   color: lightgrey;
+  text-align: center;
 }
 
 @media (max-width: 800px) {
   .cc-template-header {
     flex-direction: column;
+    padding: 10px 50px;
   }
   .cc-template-header .search {
     margin: 10px;
