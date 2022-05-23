@@ -69,11 +69,14 @@ class Book extends Component {
               <img src={book.image} />
               <div>
                 <h1>{book.title}</h1>
-                <h3>{book.author}</h3>
+                <h3>
+                  By: <b>{book.author}</b>
+                </h3>
                 <p>
                   <br />
                   {book.description}
                 </p>
+                <h4 className="cc-book-isbn">ISBN: {book.isbn}</h4>
                 <h3>
                   Copies avaliable:{" "}
                   <span
