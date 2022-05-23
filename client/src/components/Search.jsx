@@ -37,6 +37,7 @@ const Search = ({ onTextChange, onSubmit }) => {
         />
       </form>
       <SearchOutlined
+        onClick={submit}
         className={`cc-search-icon ${showSearchInput && "open"}`}
       />
     </div>

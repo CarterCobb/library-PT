@@ -89,8 +89,8 @@ class Account extends Component {
           >
             <BookGrid
               account
-              books={books.filter((book) =>
-                book.states
+              books={(books || []).filter((book) =>
+                (book.states || [])
                   .filter((s) => s.checkedOut)
                   .map((s) => s.user)
                   .includes(user.uid)
